@@ -1,0 +1,99 @@
+# ==============================================================================
+#  linode-object-storage — terraform.tfvars
+# ==============================================================================
+#  Copy this file to `terraform.tfvars`, set the values, then run:
+#      tofu init && tofu apply        (or:  terraform init && terraform apply)
+#
+# AUTHENTICATION — Linode:
+#   The linode/linode provider authenticates with a single Linode APIv4
+#   Personal Access Token (PAT) — there is no access-key/secret-key pair for
+#   the management API.
+#   Quick start: There is no Terraform-specific login. To mint/persist a token
+#   via the CLI: `linode-cli configure` (prompts for a PAT and writes
+#   ~/.config/linode-cli). The provider itself does not read the linode-cli
+#   file — copy the token into LINODE_TOKEN or ~/.config/linode.
+#   Environment variables Terraform reads:
+#     LINODE_TOKEN  (secret) — Linode APIv4 Personal Access Token used to authenticate all management API calls.
+#     LINODE_URL — Override the API base URL (HTTP/S endpoint); rarely needed.
+#     LINODE_API_VERSION — API version override; defaults to v4.
+#     LINODE_CA — Path to a custom CA certificate bundle for the API endpoint.
+#     LINODE_OBJ_ACCESS_KEY  (secret) — Object Storage access key (only for the linode_object_storage_* resources, not API auth).
+#   Full guide (auth + remote state):  docs/CONNECTING-PROVIDERS.md#linode
+#
+#  Secrets below read "REPLACE_ME" — never commit real secrets. Prefer
+#  TF_VAR_<name> environment variables or a secrets manager.
+#  Status: static-validated, live-test pending (see README.md).
+# ==============================================================================
+
+
+# ------------------------------------------------------------------------------
+#  REQUIRED — you must set these
+# ------------------------------------------------------------------------------
+
+# label  —  string  (REQUIRED)
+#   Bucket name/label. 3-63 chars, lowercase letters, numbers, hyphens, dots;
+#   must start and end with a letter or number (S3 bucket-naming rules).
+#   Constraint: label must be 3-63 chars: lowercase letters, numbers, hyphens,
+#   dots; start and end alphanumeric.
+label  = "iacbazaar-example-assets"
+
+# region  —  string  (REQUIRED)
+#   Object Storage region/endpoint slug, e.g. us-east-1, us-ord-1, fr-par-1.
+#   (The deprecated 'cluster' field is not used by this module.)
+#   Constraint: region must be an Object Storage region slug, e.g. us-east-1,
+#   us-ord-1, eu-central-1.
+region = "us-ord-1"
+
+# ------------------------------------------------------------------------------
+#  OPTIONAL — defaults shown; uncomment a line to override
+# ------------------------------------------------------------------------------
+
+# acl  —  string  (optional, default: "private")
+#   Constraint: acl must be one of private, public-read, authenticated-read,
+#   public-read-write.
+# acl = "private"
+
+# versioning  —  bool  (optional, default: true)
+#   Enable object versioning (keep prior versions). Recommended for data
+#   protection; pairs with noncurrent_version_expiration to bound storage cost.
+versioning             = true
+
+# cors_enabled  —  bool  (optional, default: false)
+#   Enable permissive CORS (all origins) on the bucket. Off by default — only
+#   enable for browser-facing public assets, and prefer a narrower policy via
+#   the S3 API for production.
+# cors_enabled = false
+
+# lifecycle_rules  —  map  (optional, default: {})
+#   Constraint: Each lifecycle rule may set expiration_days OR expiration_date,
+#   not both.
+lifecycle_rules = {
+  expire-tmp = {
+    prefix          = "tmp/"
+    expiration_days = 7
+  }
+  prune-old-versions = {
+    noncurrent_version_expiration_days     = 30
+    abort_incomplete_multipart_upload_days = 3
+  }
+}
+
+# cert  —  object  (optional, sensitive, default: null)
+# cert = null
+
+# create_access_key  —  bool  (optional, default: true)
+#   Create a scoped Object Storage access key for this bucket. The key is
+#   limited to this bucket (least privilege) with the permission set in
+#   access_key_permissions.
+# create_access_key = true
+
+# access_key_label  —  string  (optional, default: null)
+#   Label for the generated Object Storage access key. Defaults to "<label>-key"
+#   when null.
+# access_key_label = null
+
+# access_key_permissions  —  string  (optional, default: "read_write")
+#   Permission granted to the scoped access key for this bucket: read_only or
+#   read_write.
+#   Constraint: access_key_permissions must be read_only or read_write.
+access_key_permissions = "read_write"
