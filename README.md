@@ -8,7 +8,7 @@ This module passes static validation (`tofu validate`, tflint and checkov) but h
 
 ```hcl
 module "object_storage" {
-  source  = "CyberCoreSystems/object-storage/linode"
+  source  = "registry.terraform.io/CyberCoreSystems/object-storage/linode"
   version = "~> 1.0"
 
   # See variables.tf for the full input contract.
